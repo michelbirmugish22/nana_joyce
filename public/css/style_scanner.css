@@ -1,0 +1,181 @@
+/* body {
+  font-family: Arial, sans-serif;
+  text-align: center;
+  background: #f8f9fa;
+  margin: 0;
+  padding: 10px;
+}
+
+h1 {
+  font-size: 1.5em;
+  margin-bottom: 10px;
+} */
+
+video {
+  width: 90vw;
+  max-width: 640px;
+  border-radius: 10px;
+  border: 3px solid #333;
+  background: #000;
+}
+
+.controls {
+  margin: 15px 0;
+}
+/* 
+button, a {
+  padding: 12px 18px;
+  font-size: 16px;
+  margin: 5px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  background-color: #007bff;
+  color: white;
+} */
+
+button:hover {
+  background-color: #0056b3;
+  color: white;
+}
+
+#pages {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+.page {
+  position: relative;
+}
+
+.page img {
+  width: 120px;
+  border-radius: 6px;
+  border: 2px solid #333;
+}
+
+.delete-btn,
+.edit-btn {
+  position: absolute;
+  top: 5px;
+  width: 25px;
+  height: 25px;
+  border: none;
+  border-radius: 50%;
+  color: white;
+  cursor: pointer;
+}
+
+.delete-btn {
+  right: 5px;
+  background: red;
+}
+
+.edit-btn {
+  left: 5px;
+  background: #007bff;
+}
+
+/* Éditeur */
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.85);
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+
+#edit-canvas {
+  max-width: 90vw;
+  max-height: 80vh;
+  background: white;
+  border: none; /* 2px solid #333;*/
+}
+
+.edit-controls button {
+  margin: 5px;
+  padding: 10px 14px;
+  font-size: 16px;
+}
+.camera-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 10px auto;
+  position: relative;
+  border: none;
+}
+
+#video,
+#canvas {
+  width: 595px;
+  height: 842px;
+  border: none;
+  object-fit: cover;
+  background: #ffffff;
+  aspect-ratio: 210 / 297;
+}
+
+/* Position the capture button at the canvas bottom-right */
+#capture,
+#generate,
+#download_btn {
+  position: fixed; /* anchored to .camera-container */
+  right: 12px;
+  bottom: 5%;
+  z-index: 1000;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  border: none;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+}
+#generate {
+  bottom: 20%;
+}
+#download_btn {
+  bottom: 35%;
+}
+
+#capture:active,
+#generate:active,
+#download_btn:active {
+  transform: translateY(-5%) scale(0.96);
+}
+
+/* Ajustements pour petits écrans */
+@media (max-width: 700px) {
+  #capture,
+  #generate,
+  #download_btn {
+    right: 8px;
+    width: 70px;
+    height: 70px;
+  }
+  #generate {
+    bottom: 15%;
+  }
+  #download_btn {
+    bottom: 25%;
+  }
+}
+
+@media (max-width: 700px) {
+  #video,
+  #canvas {
+    width: 99vw;
+    height: calc(99vw * 1.414); /* ratio A4 sur mobile */
+  }
+}

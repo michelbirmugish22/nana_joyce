@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gestion des Documents</title>
+
+    <link rel="stylesheet" href="./css/style_scanner.css" />
+    <link href="css/app.css" rel="stylesheet" />
+
+    <link
+      href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  </head>
+  <script>
+    $(function () {
+      $.getJSON("/api/session")
+        .done(function (data) {
+          if (!data || !data.connected) {
+            window.location.href = "./login";
+            return;
+          }
+          // Optionnel : mettre à jour l'UI avec les infos utilisateur si fournies
+          if (data.user) {
+            if (data.user.name) $("#userName").text(data.user.name);
+            if (data.user.photo) $("#userPhoto").attr("src", data.user.photo);
+          }
+        })
+        .fail(function () {
+          // En cas d'erreur, rediriger vers la page de login
+          window.location.href = "./login";
+        });
+    });
+  </script>
+  <body>
+    <div class="wrapper">
+      <nav id="sidebar" class="sidebar js-sidebar">
+        <!-- Chargement ici  -->
+      </nav>
+
+      <div class="main">
+        <!-- <div id="entete"></div> -->
+        <nav class="navbar navbar-expand navbar-light navbar-bg">
+          <a class="sidebar-toggle js-sidebar-toggle">
+            <i class="hamburger align-self-center"></i>
+          </a>
+
+          <div class="navbar-collapse collapse">
+            <ul class="navbar-nav navbar-align">
+              <li class="nav-item dropdown">
+                <a
+                  class="nav-icon dropdown-toggle d-inline-block d-sm-none"
+                  href="#"
+                  data-bs-toggle="dropdown"
+                >
+                  <i class="align-middle" data-feather="settings"></i>
+                </a>
+
+                <a
+                  class="nav-link dropdown-toggle d-none d-sm-inline-block"
+                  href="#"
+                  data-bs-toggle="dropdown"
+                >
+                  <img
+                    id="userPhoto"
+                    src="img/avatars/avatar.jpg"
+                    class="avatar img-fluid rounded me-1"
+                    alt="Charles Hall"
+                  />
+                  <span class="text-dark" id="userName">Michel</span>
+                </a>
+                <div class="dropdown-menu dropdown-menu-end">
+                  <a class="dropdown-item" href="#"
+                    ><i class="align-middle me-1" data-feather="user"></i>
+                    Profil</a
+                  >
+                  <div class="dropdown-divider"></div>
+                  <a class="dropdown-item" id="logout_btn" href="#"
+                    >Se déconnecter</a
+                  >
+                </div>
+              </li>
+            </ul>
+          </div>
+        </nav>
+
+        <main class="content">
+          <div class="container-fluid p-0">
+            <h1 class="h3 mb-3">Numérisation des Documents</h1>
+            <div class="card m-2">
+              <div class="card-body">
+                <input
+                  type="radio"
+                  class=""
+                  name="numeriser"
+                  id="scan"
+                  checked
+                />
+                <label for="scan" class="btn btn-primary">Scanning</label>
+
+                <input type="radio" class="" name="numeriser" id="upload" />
+                <label for="upload" class="btn btn-primary">Uploading</label>
+              </div>
+            </div>
+            <div class="row" id="scanning_div">
+              <div class="col-md-6">
+                <div class="camera-container">
+                  <video id="video" autoplay playsinline></video>
+                  <canvas id="canvas" style="display: none"></canvas>
+                </div>
+
+                <div class="controls">
+                  <button class="btn btn-primary" id="capture">
+                    <i
+                      class="align-middle me-2"
+                      style="width: auto; height: 50px"
+                      data-feather="camera"
+                    ></i>
+                  </button>
+                  <button class="btn btn-success" id="generate">
+                    <i
+                      class="align-middle me-2"
+                      style="width: auto; height: 50px"
+                      data-feather="save"
+                    ></i>
+                  </button>
+                  <button class="btn btn-info" id="download_btn">
+                    <a id="download" download="document.pdf">
+                      <i
+                        class="align-middle me-2"
+                        style="width: auto; height: 50px"
+                        data-feather="download"
+                      ></i
+                    ></a>
+                  </button>
+                </div>
+
+                <div id="pages"></div>
+
+                <!-- Popup d'édition -->
+                <div id="editor-modal" class="modal">
+                  <canvas id="edit-canvas"></canvas>
+                  <div class="edit-controls">
+                    <button id="rotate-left">↩️</button>
+                    <button id="rotate-right">↪️</button>
+                    <button id="enhance">✨ Luminosité +</button>
+                    <button id="save-edit">✅ Sauver</button>
+                    <button id="cancel-edit">❌ Annuler</button>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <h1>Informations sur le document numérisé</h1>
+                <form id="documentForm">
+                  <input type="hidden" id="documentId" />
+
+                  <div class="mb-3">
+                    <label for="description_scan" class="form-label"
+                      >Description</label
+                    >
+                    <input
+                      type="text"
+                      id="description_scan"
+                      class="form-control"
+                      placeholder="Description du document"
+                      required
+                    />
+                  </div>
+
+                  <div class="mb-3">
+                    <label for="code_scan" class="form-label">Code</label>
+                    <input
+                      type="text"
+                      id="code_scan"
+                      class="form-control"
+                      placeholder="Code interne"
+                      required
+                    />
+                  </div>
+
+                  <div class="mb-3">
+                    <label for="categorie_scan" class="form-label"
+                      >Catégorie</label
+                    >
+                    <select
+                      id="categorie_scan"
+                      class="form-control"
+                      required
+                    ></select>
+                  </div>
+
+                  <div class="mb-3">
+                    <label for="niveau_conf_scan" class="form-label"
+                      >Niveau de confidentialité</label
+                    >
+                    <select id="niveau_conf_scan" class="form-control" required>
+                      <option value="1">1 - Public</option>
+                      <option value="2">2 - Interne</option>
+                      <option value="3">3 - Confidentiel</option>
+                      <option value="4">4 - Très confidentiel</option>
+                    </select>
+                  </div>
+                  <input
+                    type="file"
+                    id="file_scan"
+                    class="form-control"
+                    required
+                    style="display: none"
+                  />
+                </form>
+                <div id="formMessage2" class="mt-2"></div>
+              </div>
+            </div>
+
+            <div class="row" id="uploading_div" style="display: none">
+              <!-- Formulaire à gauche -->
+              <div class="col-md-4">
+                <div class="card">
+                  <div class="card-body">
+                    <h5 class="card-title">Ajouter / Modifier un document</h5>
+                    <form id="documentForm">
+                      <input type="hidden" id="documentId" />
+
+                      <div class="mb-3">
+                        <label for="description" class="form-label"
+                          >Description</label
+                        >
+                        <input
+                          type="text"
+                          id="description"
+                          class="form-control"
+                          placeholder="Description du document"
+                          required
+                        />
+                      </div>
+
+                      <div class="mb-3">
+                        <label for="code" class="form-label">Code</label>
+                        <input
+                          type="text"
+                          id="code"
+                          class="form-control"
+                          placeholder="Code interne"
+                          required
+                        />
+                      </div>
+
+                      <div class="mb-3">
+                        <label for="categorie" class="form-label"
+                          >Catégorie</label
+                        >
+                        <select
+                          id="categorie"
+                          class="form-control"
+                          required
+                        ></select>
+                      </div>
+
+                      <div class="mb-3">
+                        <label for="niveau_conf" class="form-label"
+                          >Niveau de confidentialité</label
+                        >
+                        <select id="niveau_conf" class="form-control" required>
+                          <option value="1">1 - Public</option>
+                          <option value="2">2 - Interne</option>
+                          <option value="3">3 - Confidentiel</option>
+                          <option value="4">4 - Très confidentiel</option>
+                        </select>
+                      </div>
+
+                      <div class="mb-3" id="fileInputContainer">
+                        <label for="file" class="form-label">Fichier</label>
+                        <input
+                          type="file"
+                          id="file"
+                          class="form-control"
+                          required
+                        />
+                      </div>
+
+                      <button
+                        type="submit"
+                        class="btn btn-primary w-100"
+                        id="saveBtn"
+                      >
+                        Ajouter
+                      </button>
+                      <button
+                        type="button"
+                        class="btn btn-secondary w-100 mt-2"
+                        id="cancelBtn"
+                        style="display: none"
+                      >
+                        Annuler
+                      </button>
+                    </form>
+                    <div id="formMessage" class="mt-2"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- DataTable à droite -->
+              <div class="col-md-8">
+                <div class="card">
+                  <div class="card-body">
+                    <table
+                      id="documentTable"
+                      class="display"
+                      style="width: 100%"
+                    >
+                      <thead>
+                        <tr>
+                          <th>Description</th>
+                          <th>Code</th>
+                          <th>Catégorie</th>
+                          <th>Date</th>
+                          <th>Niveau</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody></tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+
+        <div id="footer"></div>
+      </div>
+    </div>
+    <script src="./js/script_scanner.js"></script>
+
+    <script type="module" src="./js/app.js"></script>
+    <script>
+      $(document).ready(function () {
+        // Charger le sidebar
+        $("#sidebar").load("sidebar.html", function () {
+          feather.replace(); // Recharger les icônes Feather après injection
+        });
+        $("#footer").load("footer.html", function () {});
+      });
+      // Charger les infos utilisateur dans l'entête
+      $(document).ready(function () {
+        $.get("/api/session", function (data) {
+          if (data.connected) {
+            $("#userName").text(data.user.nom + " " + data.user.postnom);
+            $("#userPhoto").attr(
+              "src",
+              data.user.photo || "img/avatars/avatar.jpg"
+            );
+          } else {
+            $("#userName").text("Invité");
+            $("#userPhoto").attr("src", "img/avatars/avatar.jpg");
+          }
+        });
+      });
+    </script>
+  </body>
+</html>

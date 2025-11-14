@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Recherche de Documents</title>
+
+    <link rel="stylesheet" href="./css/style_scanner.css" />
+    <link href="css/app.css" rel="stylesheet" />
+
+    <link
+      href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+    <style>
+      .search-box {
+        background: #fff;
+        padding: 20px;
+        border-radius: 5px;
+        box-shadow: 0 2px 4px #0001;
+        margin-bottom: 20px;
+      }
+      .preview-frame {
+        width: 100%;
+        height: 600px;
+        border: 1px solid #ccc;
+        margin-top: 20px;
+        display: none;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="wrapper">
+      <nav id="sidebar" class="sidebar js-sidebar">
+        <!-- Chargement ici  -->
+      </nav>
+
+      <div class="main">
+        <!-- <div id="entete"></div> -->
+        <nav class="navbar navbar-expand navbar-light navbar-bg">
+          <a class="sidebar-toggle js-sidebar-toggle">
+            <i class="hamburger align-self-center"></i>
+          </a>
+
+          <div class="navbar-collapse collapse">
+            <ul class="navbar-nav navbar-align">
+              <li class="nav-item dropdown">
+                <a
+                  class="nav-icon dropdown-toggle d-inline-block d-sm-none"
+                  href="#"
+                  data-bs-toggle="dropdown"
+                >
+                  <i class="align-middle" data-feather="settings"></i>
+                </a>
+
+                <a
+                  class="nav-link dropdown-toggle d-none d-sm-inline-block"
+                  href="#"
+                  data-bs-toggle="dropdown"
+                >
+                  <img
+                    id="userPhoto"
+                    src="img/avatars/avatar.jpg"
+                    class="avatar img-fluid rounded me-1"
+                    alt="Charles Hall"
+                  />
+                  <span class="text-dark" id="userName">Michel</span>
+                </a>
+                <div class="dropdown-menu dropdown-menu-end">
+                  <a class="dropdown-item" href="#"
+                    ><i class="align-middle me-1" data-feather="user"></i>
+                    Profil</a
+                  >
+                  <div class="dropdown-divider"></div>
+                  <a class="dropdown-item" id="logout_btn" href="#"
+                    >Se déconnecter</a
+                  >
+                </div>
+              </li>
+            </ul>
+          </div>
+        </nav>
+        <main class="content mt-4">
+          <h1 class="h3 mb-3">🔍 Recherche de documents</h1>
+
+          <!-- Bouton Historique -->
+          <a href="/historique" class="btn btn-secondary mb-3"
+            >📜 Historique des recherches</a
+          >
+
+          <!-- Formulaire recherche -->
+          <div class="search-box">
+            <div class="row">
+              <div class="col-md-4">
+                <label class="form-label">Mot clé / Description</label>
+                <input type="text" id="search_desc" class="form-control" />
+              </div>
+
+              <div class="col-md-3">
+                <label class="form-label">Code</label>
+                <input type="text" id="search_code" class="form-control" />
+              </div>
+
+              <div class="col-md-3">
+                <label class="form-label">Catégorie</label>
+                <select id="search_categorie" class="form-control"></select>
+              </div>
+
+              <div class="col-md-2">
+                <label class="form-label">Niveau</label>
+                <select id="search_niveau" class="form-control">
+                  <option value="">Tous</option>
+                  <option value="1">1 - Public</option>
+                  <option value="2">2 - Interne</option>
+                  <option value="3">3 - Confidentiel</option>
+                  <option value="4">4 - Très confidentiel</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Dates -->
+            <div class="row mt-3">
+              <div class="col-md-6">
+                <label class="form-label">Date début</label>
+                <input type="date" id="search_date1" class="form-control" />
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label">Date fin</label>
+                <input type="date" id="search_date2" class="form-control" />
+              </div>
+            </div>
+
+            <button id="btnRechercher" class="btn btn-primary mt-3 w-100">
+              🔍 Rechercher
+            </button>
+          </div>
+
+          <!-- Résultats -->
+          <div class="table-responsive-sm">
+            <table id="resultTable" class="display" style="width: 100%">
+              <thead>
+                <tr>
+                  <th>Description</th>
+                  <th>Code</th>
+                  <th>Catégorie</th>
+                  <th>Date</th>
+                  <th>Niveau</th>
+                  <th>Ouvrir</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+
+          <!-- Iframe preview -->
+          <iframe id="previewFrame" class="preview-frame"></iframe>
+        </main>
+      </div>
+    </div>
+
+    <script>
+      $(document).ready(function () {
+        // ----------------------
+        //   SET DEFAULT DATES
+        // ----------------------
+        const now = new Date().toISOString().split("T")[0];
+        const monthAgo = new Date(Date.now() - 30 * 24 * 3600 * 1000)
+          .toISOString()
+          .split("T")[0];
+
+        $("#search_date1").val(monthAgo);
+        $("#search_date2").val(now);
+
+        // ----------------------
+        //   INIT TABLE
+        // ----------------------
+        let table = $("#resultTable").DataTable({
+          columns: [
+            { data: "description" },
+            { data: "code" },
+            { data: "categorie_designation" },
+            { data: "date_created" },
+            { data: "niveau_conf" },
+            {
+              data: "url",
+              render: function (url) {
+                return url
+                  ? `<button class="btn btn-info btn-sm openDoc" data-url="${url}">📄 Ouvrir</button>`
+                  : "Aucun fichier";
+              },
+            },
+          ],
+        });
+
+        // ----------------------
+        //   CHARGER CATÉGORIES
+        // ----------------------
+        $.get("/api/categorie", function (cat) {
+          cat.forEach((c) => {
+            $("#search_categorie").append(
+              `<option value="${c.id}">${c.designation}</option>`
+            );
+          });
+        });
+
+        // ----------------------
+        //   RECHERCHE
+        // ----------------------
+        $("#btnRechercher").click(async function () {
+          const desc = $("#search_desc").val().toLowerCase();
+          const code = $("#search_code").val().toLowerCase();
+          const cat = $("#search_categorie").val();
+          const niv = $("#search_niveau").val();
+          const d1 = $("#search_date1").val();
+          const d2 = $("#search_date2").val();
+
+          const documents = await $.get("/api/document");
+
+          // Filtrage local
+          const result = documents.filter((doc) => {
+            const dateDoc = doc.date_created.split("T")[0];
+            return (
+              (desc === "" || doc.description.toLowerCase().includes(desc)) &&
+              (code === "" || doc.code.toLowerCase().includes(code)) &&
+              (cat === "" || doc.categorie_id == cat) &&
+              (niv === "" || doc.niveau_conf == niv) &&
+              dateDoc >= d1 &&
+              dateDoc <= d2
+            );
+          });
+
+          table.clear().rows.add(result).draw();
+
+          // Save search history
+          $.post("/api/rechercher", {
+            resultat: JSON.stringify(result.map((r) => r.id)),
+            date: new Date().toISOString(),
+            utilisateur_id: 1, // À remplacer par session
+            document_id: result.length ? result[0].id : null,
+          });
+        });
+
+        // ----------------------
+        //   VIEW FILE IN FRAME
+        // ----------------------
+        $("#resultTable").on("click", ".openDoc", function () {
+          const url = $(this).data("url");
+          $("#previewFrame").attr("src", url).show();
+          window.scrollTo({
+            top: document.body.scrollHeight,
+            behavior: "smooth",
+          });
+        });
+      });
+    </script>
+    <script>
+      $(document).ready(function () {
+        $("#sidebar").load("sidebar.html", function () {
+          feather.replace(); // Recharger les icônes Feather après injection
+        });
+        $("#footer").load("footer.html", function () {});
+      });
+      // Charger les infos utilisateur dans l'entête
+      $(document).ready(function () {
+        $.get("/api/session", function (data) {
+          if (data.connected) {
+            $("#userName").text(data.user.nom + " " + data.user.postnom);
+            $("#userPhoto").attr(
+              "src",
+              data.user.photo || "img/avatars/avatar.jpg"
+            );
+          } else {
+            $("#userName").text("Invité");
+            $("#userPhoto").attr("src", "img/avatars/avatar.jpg");
+          }
+        });
+      });
+    </script>
+    <script src="js/app.js"></script>
+  </body>
+</html>

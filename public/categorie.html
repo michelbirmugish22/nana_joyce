@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gestion des Catégories</title>
+    <link href="css/app.css" rel="stylesheet" />
+    <link
+      href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+  </head>
+  <body>
+    <div class="wrapper">
+      <nav id="sidebar" class="sidebar js-sidebar">
+        <!-- Chargement ici  -->
+      </nav>
+
+      <div class="main">
+        <!-- <div id="entete"></div> -->
+        <nav class="navbar navbar-expand navbar-light navbar-bg">
+          <a class="sidebar-toggle js-sidebar-toggle">
+            <i class="hamburger align-self-center"></i>
+          </a>
+
+          <div class="navbar-collapse collapse">
+            <ul class="navbar-nav navbar-align">
+              <li class="nav-item dropdown">
+                <a
+                  class="nav-icon dropdown-toggle d-inline-block d-sm-none"
+                  href="#"
+                  data-bs-toggle="dropdown"
+                >
+                  <i class="align-middle" data-feather="settings"></i>
+                </a>
+
+                <a
+                  class="nav-link dropdown-toggle d-none d-sm-inline-block"
+                  href="#"
+                  data-bs-toggle="dropdown"
+                >
+                  <img
+                    id="userPhoto"
+                    src="img/avatars/avatar.jpg"
+                    class="avatar img-fluid rounded me-1"
+                    alt="Charles Hall"
+                  />
+                  <span class="text-dark" id="userName">Michel</span>
+                </a>
+                <div class="dropdown-menu dropdown-menu-end">
+                  <a class="dropdown-item" href="#"
+                    ><i class="align-middle me-1" data-feather="user"></i>
+                    Profil</a
+                  >
+                  <div class="dropdown-divider"></div>
+                  <a class="dropdown-item" id="logout_btn" href="#"
+                    >Se déconnecter</a
+                  >
+                </div>
+              </li>
+            </ul>
+          </div>
+        </nav>
+
+        <main class="content">
+          <div class="container-fluid p-0">
+            <h1 class="h3 mb-3">Gestion des Catégories</h1>
+
+            <div class="row">
+              <!-- Formulaire à gauche -->
+              <div class="col-md-4">
+                <div class="card">
+                  <div class="card-body">
+                    <h5 class="card-title">Ajouter / Modifier une catégorie</h5>
+                    <form id="categorieForm">
+                      <input type="hidden" id="categorieId" />
+                      <div class="mb-3">
+                        <label for="designation" class="form-label"
+                          >Désignation</label
+                        >
+                        <input
+                          type="text"
+                          id="designation"
+                          class="form-control"
+                          placeholder="Désignation de la catégorie"
+                          required
+                        />
+                      </div>
+                      <div class="mb-3">
+                        <label for="nom" class="form-label">Nom</label>
+                        <input
+                          type="text"
+                          id="nom"
+                          class="form-control"
+                          placeholder="Nom interne"
+                          required
+                        />
+                      </div>
+                      <button
+                        type="submit"
+                        class="btn btn-primary w-100"
+                        id="saveBtn"
+                      >
+                        Ajouter
+                      </button>
+                      <button
+                        type="button"
+                        class="btn btn-secondary w-100 mt-2"
+                        id="cancelBtn"
+                        style="display: none"
+                      >
+                        Annuler
+                      </button>
+                    </form>
+                    <div id="formMessage" class="mt-2"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- DataTable à droite -->
+              <div class="col-md-8">
+                <div class="card">
+                  <div class="card-body">
+                    <table
+                      id="categorieTable"
+                      class="display"
+                      style="width: 100%"
+                    >
+                      <thead>
+                        <tr>
+                          <th>Désignation</th>
+                          <th>Nom</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody></tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+
+        <div id="footer"></div>
+      </div>
+    </div>
+
+    <script src="./js/app.js"></script>
+
+    <script>
+      $(document).ready(function () {
+        let table = $("#categorieTable").DataTable({
+          ajax: {
+            url: "/api/categorie",
+            dataSrc: "",
+          },
+          columns: [
+            { data: "designation" },
+            { data: "nom" },
+            {
+              data: null,
+              render: function (data, type, row) {
+                return `
+            <button class="btn btn-sm btn-info showBtn">Afficher</button>
+            <button class="btn btn-sm btn-warning editBtn">Modifier</button>
+            <button class="btn btn-sm btn-danger deleteBtn">Supprimer</button>
+          `;
+              },
+            },
+          ],
+        });
+
+        // Ajouter / Modifier
+        $("#categorieForm").submit(async function (e) {
+          e.preventDefault();
+          const id = $("#categorieId").val();
+          const designation = $("#designation").val().trim();
+          const nom = $("#nom").val().trim();
+          if (!designation || !nom) return;
+
+          const method = id ? "PUT" : "POST";
+          const url = id ? `/api/categorie/${id}` : "/api/categorie";
+          try {
+            const res = await fetch(url, {
+              method: method,
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ designation, nom }),
+            });
+            const result = await res.json();
+            $("#formMessage").html(
+              `<span class="${res.ok ? "text-success" : "text-danger"}">${
+                result.message
+              }</span>`
+            );
+            $("#categorieForm")[0].reset();
+            $("#categorieId").val("");
+            $("#saveBtn").text("Ajouter");
+            $("#cancelBtn").hide();
+            table.ajax.reload();
+          } catch (err) {
+            console.error(err);
+            $("#formMessage").html(
+              '<span class="text-danger">Erreur serveur</span>'
+            );
+          }
+        });
+
+        // Annuler modification
+        $("#cancelBtn").click(function () {
+          $("#categorieForm")[0].reset();
+          $("#categorieId").val("");
+          $("#saveBtn").text("Ajouter");
+          $(this).hide();
+          $("#formMessage").html("");
+        });
+
+        // Éditer
+        $("#categorieTable tbody").on("click", ".editBtn", function () {
+          const data = table.row($(this).parents("tr")).data();
+          $("#categorieId").val(data.id);
+          $("#designation").val(data.designation);
+          $("#nom").val(data.nom);
+          $("#saveBtn").text("Modifier");
+          $("#cancelBtn").show();
+        });
+
+        // Supprimer
+        $("#categorieTable tbody").on("click", ".deleteBtn", async function () {
+          if (!confirm("Confirmez la suppression ?")) return;
+          const data = table.row($(this).parents("tr")).data();
+          try {
+            const res = await fetch(`/api/categorie/${data.id}`, {
+              method: "DELETE",
+            });
+            const result = await res.json();
+            alert(result.message);
+            table.ajax.reload();
+          } catch (err) {
+            console.error(err);
+            alert("Erreur serveur");
+          }
+        });
+
+        // Afficher
+        $("#categorieTable tbody").on("click", ".showBtn", function () {
+          const data = table.row($(this).parents("tr")).data();
+          alert(`Catégorie : ${data.designation}\nNom : ${data.nom}`);
+        });
+      });
+    </script>
+
+    <script>
+      $(document).ready(function () {
+        // Charger le sidebar
+        $("#sidebar").load("sidebar.html", function () {
+          feather.replace(); // Recharger les icônes Feather après injection
+        });
+
+        $("#footer").load("footer.html", function () {});
+      });
+      // Charger les infos utilisateur dans l'entête
+      $(document).ready(function () {
+        $.get("/api/session", function (data) {
+          if (data.connected) {
+            $("#userName").text(data.user.nom + " " + data.user.postnom);
+            $("#userPhoto").attr(
+              "src",
+              data.user.photo || "img/avatars/avatar.jpg"
+            );
+          } else {
+            $("#userName").text("Invité");
+            $("#userPhoto").attr("src", "img/avatars/avatar.jpg");
+          }
+        });
+      });
+    </script>
+  </body>
+</html>

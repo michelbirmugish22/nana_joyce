@@ -1,21 +1,227 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
-  <meta charset="UTF-8" />
-  <title>Inscription</title>
-  <link rel="stylesheet" href="./css/style.css">
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="Page d'inscription">
+  <meta name="author" content="Système documentaire">
+  <link rel="shortcut icon" href="img/icons/icon-48x48.png" />
+  <title>Inscription | Système documentaire</title>
 
+  <link href="css/app.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    .photo-preview {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid #ccc;
+      display: block;
+      margin: 0 auto 10px;
+    }
+  </style>
 </head>
-<body>
-  <h1>Créer un compte</h1>
-  <form id="registerForm">
-    <input type="text" placeholder="Nom d'utilisateur" id="username" required><br>
-    <input type="email" placeholder="Email" id="email" required><br>
-    <input type="password" placeholder="Mot de passe" id="password" required><br>
-    <button type="submit">S'inscrire</button>
-  </form>
-  <p><a href="index.html">Déjà inscrit ? Se connecter</a></p>
 
-  <script src="js/main.js"></script>
+<body>
+  <main class="d-flex w-100">
+    <div class="container d-flex flex-column">
+      <div class="row vh-100">
+        <div class="col-sm-10 col-md-8 col-lg-8 mx-auto d-table h-100">
+          <div class="d-table-cell align-middle">
+
+            <div class="text-center mt-4">
+              <h1 class="h2">Créer un compte</h1>
+              <p class="lead">Remplissez les informations ci-dessous pour vous inscrire.</p>
+            </div>
+
+            <div class="card shadow">
+              <div class="card-body">
+                <div class="m-sm-4">
+                  <form id="registerForm" enctype="multipart/form-data">
+                    
+
+                    <div class="row">
+                      <div class="col-md-6 mb-3">
+                        <label class="form-label">Nom</label>
+                        <input class="form-control form-control-lg" type="text" name="nom" placeholder="Entrez votre nom"
+                          required />
+                      </div>
+                      <div class="col-md-6 mb-3">
+                        <label class="form-label">Postnom</label>
+                        <input class="form-control form-control-lg" type="text" name="postnom"
+                          placeholder="Entrez votre postnom" required />
+                      </div>
+
+                      <div class="col-md-6 mb-3">
+                        <label class="form-label">Sexe</label>
+                        <select class="form-control form-control-lg" name="sexe" required>
+                          <option value="">-- Sélectionnez --</option>
+                          <option value="M">Masculin</option>
+                          <option value="F">Féminin</option>
+                        </select>
+                      </div>
+
+                      <div class="col-md-6 mb-3">
+                        <label class="form-label">Date de naissance</label>
+                        <input class="form-control form-control-lg" type="date" name="datenaiss" required />
+                      </div>
+
+                      <div class="col-md-6 mb-3">
+                        <label class="form-label">Adresse</label>
+                        <input class="form-control form-control-lg" type="text" name="adresse"
+                          placeholder="Entrez votre adresse" />
+                      </div>
+
+                      <div class="col-md-6 mb-3">
+                        <label class="form-label">Faculté</label>
+                        <select class="form-control form-control-lg" name="faculte_id" id="faculteSelect" required>
+                          <option value="">-- Choisissez une faculté --</option>
+                        </select>
+                      </div>
+
+                      <div class="col-md-6 mb-3">
+                        <label class="form-label">Service</label>
+                        <select class="form-control form-control-lg" name="service_id" id="serviceSelect" >
+                          <option value="">-- Choisissez un service --</option>
+                        </select>
+                      </div>
+
+                      <div class="col-md-6 mb-3">
+                        <label class="form-label">Rôle</label>
+                        <select class="form-control form-control-lg" name="role" required>
+                          <option value="">-- Choisissez un rôle --</option>
+                          <option value="admin">Administrateur</option>
+                          <option value="doyen">Doyen</option>
+                          <option value="agent">Agent</option>
+                          <option value="etudiant">Étudiant</option>
+                          <option value="secretaire">Secrétaire</option>
+                        </select>
+                      </div>
+
+                      <div class="col-md-6 mb-3">
+                        <label class="form-label">Email</label>
+                        <input class="form-control form-control-lg" type="email" name="mail"
+                          placeholder="Entrez votre email" required />
+                      </div>
+
+                      <div class="col-md-6 mb-3">
+                        <label class="form-label">Mot de passe</label>
+                        <input class="form-control form-control-lg" type="password" name="password"
+                          placeholder="Entrez votre mot de passe" required />
+                      </div>
+					  <div class="text-center mb-4">
+                      <img id="photoPreview" src="img/avatar-placeholder.png" alt="PHOTO"
+                        class="photo-preview">
+                      <input class="form-control" type="file" name="photo" id="photoInput" accept="image/*" />
+                    </div>
+                    </div>
+
+                    <div class="text-center mt-4">
+                      <button type="submit" class="btn btn-lg btn-primary w-100">S'inscrire</button>
+                    </div>
+
+                    <div id="message" class="text-center mt-3"></div>
+                  </form>
+                </div>
+              </div>
+            </div>
+
+            <div class="text-center mt-3">
+              <a href="/login">Déjà un compte ? Se connecter</a>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // ============================
+    // 🖼️ Prévisualisation photo
+    // ============================
+    document.getElementById("photoInput").addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const preview = document.getElementById("photoPreview");
+        preview.src = URL.createObjectURL(file);
+      }
+    });
+
+    // ============================
+    // 📦 Charger facultés & services
+    // ============================
+    async function loadFacultes() {
+      const faculteSelect = document.getElementById("faculteSelect");
+      try {
+        const res = await fetch("/api/faculte");
+        const facultes = await res.json();
+        facultes.forEach(f => {
+          const opt = document.createElement("option");
+          opt.value = f.id;
+          opt.textContent = f.designation;
+          faculteSelect.appendChild(opt);
+        });
+      } catch (err) {
+        console.error("Erreur chargement facultés :", err);
+      }
+    }
+
+    async function loadServices() {
+      const serviceSelect = document.getElementById("serviceSelect");
+      try {
+        const res = await fetch("/api/service");
+        const services = await res.json();
+        services.forEach(s => {
+          const opt = document.createElement("option");
+          opt.value = s.id;
+          opt.textContent = s.designation;
+          serviceSelect.appendChild(opt);
+        });
+      } catch (err) {
+        console.error("Erreur chargement services :", err);
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      loadFacultes();
+      loadServices();
+    });
+
+    // ============================
+    // 🧾 Soumission du formulaire
+    // ============================
+    document.getElementById("registerForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const form = e.target;
+      const formData = new FormData(form); // Pour inclure le fichier
+      const messageBox = document.getElementById("message");
+
+      try {
+        const res = await fetch("/api/register", {
+          method: "POST",
+          body: formData
+        });
+
+        const result = await res.json();
+        if (res.ok) {
+          messageBox.innerHTML = `<span class="text-success">${result.message}</span>`;
+          form.reset();
+          document.getElementById("photoPreview").src = "img/avatar-placeholder.png";
+          setTimeout(() => window.location.href = "/login", 1500);
+        } else {
+          messageBox.innerHTML = `<span class="text-danger">${result.message}</span>`;
+        }
+      } catch (err) {
+        console.error(err);
+        messageBox.innerHTML = `<span class="text-danger">Erreur de connexion au serveur.</span>`;
+      }
+    });
+  </script>
 </body>
+
 </html>
