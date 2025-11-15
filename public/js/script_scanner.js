@@ -364,7 +364,7 @@ $(document).ready(function () {
     }
   });
 
-  // Afficher - ouvre un modal avec un iframe pour afficher le fichier depuis ./uploads/
+  // Afficher - ouvre le document dans un nouvel onglet (_blank) au lieu d'une iframe
   $("#documentTable tbody").on("click", ".showBtn", async function () {
     const rowData = table.row($(this).parents("tr")).data();
     try {
@@ -381,31 +381,14 @@ $(document).ready(function () {
       // Détermine l'URL publique. Si le champ url est déjà un chemin absolu, on l'utilise.
       const src = fileUrl.startsWith("/") ? fileUrl : `/uploads/${fileUrl}`;
 
-      // Crée modal si besoin
-      let $modal = $("#fileModal");
-      if ($modal.length === 0) {
-        $modal = $(`
-            <div id="fileModal" style="position:fixed;inset:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:2000;">
-          <div style="position:relative;width:90%;height:90%;background:#fff;border-radius:4px;overflow:hidden;">
-            <button id="closeFileModal" style="position:absolute;top:10px;right:10px;z-index:10;padding:6px 10px;">Fermer</button>
-            <iframe id="fileFrame" src="" style="width:100%;height:100%;border:0;background:#fff;"></iframe>
-          </div>
-            </div>
-          `);
-        $("body").append($modal);
-
-        // Fermeture
-        $modal.on("click", "#closeFileModal", function () {
-          $modal.remove();
-        });
-        // clic en dehors du contenu ferme aussi
-        $modal.on("click", function (e) {
-          if ($(e.target).is("#fileModal")) $modal.remove();
-        });
-      }
-
-      // Charge le fichier
-      $("#fileFrame").attr("src", src);
+      // Ouvre dans un nouvel onglet de manière sécurisée
+      const a = document.createElement("a");
+      a.href = src;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
     } catch (err) {
       console.error(err);
       alert("Impossible de charger le fichier.");

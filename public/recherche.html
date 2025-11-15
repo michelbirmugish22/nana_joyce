@@ -64,7 +64,7 @@
                 >
                   <img
                     id="userPhoto"
-                    src="img/avatars/avatar.jpg"
+                    src="./img/image_ucb.png"
                     class="avatar img-fluid rounded me-1"
                     alt="Charles Hall"
                   />
@@ -190,7 +190,7 @@
               data: "url",
               render: function (url) {
                 return url
-                  ? `<button class="btn btn-info btn-sm openDoc" data-url="${url}">📄 Ouvrir</button>`
+                  ? `<a href="${url}" target="_blank" rel="noopener noreferrer" class="btn btn-info btn-sm">📄 Afficher</a>`
                   : "Aucun fichier";
               },
             },
@@ -245,17 +245,7 @@
           });
         });
 
-        // ----------------------
-        //   VIEW FILE IN FRAME
-        // ----------------------
-        $("#resultTable").on("click", ".openDoc", function () {
-          const url = $(this).data("url");
-          $("#previewFrame").attr("src", url).show();
-          window.scrollTo({
-            top: document.body.scrollHeight,
-            behavior: "smooth",
-          });
-        });
+        // Note: ouverture dans un nouvel onglet via l'attribut target="_blank" sur le lien "Afficher".
       });
     </script>
     <script>
@@ -272,13 +262,30 @@
             $("#userName").text(data.user.nom + " " + data.user.postnom);
             $("#userPhoto").attr(
               "src",
-              data.user.photo || "img/avatars/avatar.jpg"
+              data.user.photo || "./img/image_ucb.png"
             );
           } else {
             $("#userName").text("Invité");
-            $("#userPhoto").attr("src", "img/avatars/avatar.jpg");
+            $("#userPhoto").attr("src", "./img/image_ucb.png");
           }
         });
+      });
+    </script>
+    <script>
+      $(document).on("click", "#logout_btn", function (e) {
+        e.preventDefault();
+        $.ajax({
+          url: "/api/logout",
+          method: "POST",
+          dataType: "json",
+        })
+          .done(function (data, textStatus, xhr) {
+            window.location.href = "/";
+          })
+          .fail(function (xhr) {
+            let msg = "Erreur serveur";
+            alert(msg);
+          });
       });
     </script>
     <script src="js/app.js"></script>

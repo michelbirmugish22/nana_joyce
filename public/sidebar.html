@@ -1,6 +1,21 @@
+<script>
+  $(document).ready(function () {
+    $.get("/api/session", function (data) {
+      if (data.connected) {
+        if (data.user.role === "etudiant") {
+          $("#document_nav").remove();
+          $("historique_nav").remove();
+        }
+        if (data.user.role !== "admin") {
+          $("#admin_nav").remove();
+        }
+      }
+    });
+  });
+</script>
 <div class="sidebar-content js-simplebar">
   <a class="sidebar-brand" href="/">
-    <span class="align-middle">UCB - Gestion Documents</span>
+    <span class="align-middle">UCB - NumDocs</span>
   </a>
 
   <ul class="sidebar-nav">
@@ -13,9 +28,9 @@
       </a>
     </li>
 
-    <li class="sidebar-header">Numérisation</li>
+    <li class="sidebar-header">Numérisation et Recherche</li>
 
-    <li class="sidebar-item">
+    <li class="sidebar-item" id="document_nav">
       <a class="sidebar-link" href="/document">
         <i class="align-middle" data-feather="file-plus"></i>
         <span class="align-middle">Numériser et Archiver</span>
@@ -25,18 +40,18 @@
     <li class="sidebar-item">
       <a class="sidebar-link" href="recherche-documents">
         <i class="align-middle" data-feather="search"></i>
-        <span class="align-middle">Recherche</span>
+        <span class="align-middle">Rechercher des documents</span>
       </a>
     </li>
 
-    <li class="sidebar-header">Suivi & Statistiques</li>
-
-    <li class="sidebar-item">
-      <a class="sidebar-link" href="historique">
-        <i class="align-middle" data-feather="clock"></i>
-        <span class="align-middle">Historique</span>
-      </a>
-    </li>
+    <div id="historique_nav">
+      <li class="sidebar-item">
+        <a class="sidebar-link" href="historique">
+          <i class="align-middle" data-feather="clock"></i>
+          <span class="align-middle">Historique de recherches</span>
+        </a>
+      </li>
+    </div>
 
     <!-- <li class="sidebar-item">
       <a class="sidebar-link" href="statistiques">
@@ -45,47 +60,35 @@
       </a>
     </li> -->
 
-    <li class="sidebar-header">Administration</li>
+    <div id="admin_nav">
+      <li class="sidebar-header">Administration</li>
 
-    <li class="sidebar-item">
-      <a class="sidebar-link" href="/faculte">
-        <i class="align-middle" data-feather="home"></i>
-        <span class="align-middle">Facultés</span>
-      </a>
-    </li>
+      <li class="sidebar-item">
+        <a class="sidebar-link" href="/faculte">
+          <i class="align-middle" data-feather="home"></i>
+          <span class="align-middle">Facultés</span>
+        </a>
+      </li>
 
-    <li class="sidebar-item">
-      <a class="sidebar-link" href="/service">
-        <i class="align-middle" data-feather="airplay"></i>
-        <span class="align-middle">Services</span>
-      </a>
-    </li>
-    <li class="sidebar-item">
-      <a class="sidebar-link" href="/categorie">
-        <i class="align-middle" data-feather="layers"></i>
-        <span class="align-middle">Catégories</span>
-      </a>
-    </li>
+      <li class="sidebar-item">
+        <a class="sidebar-link" href="/service">
+          <i class="align-middle" data-feather="airplay"></i>
+          <span class="align-middle">Services</span>
+        </a>
+      </li>
+      <li class="sidebar-item">
+        <a class="sidebar-link" href="/categorie">
+          <i class="align-middle" data-feather="layers"></i>
+          <span class="align-middle">Catégories</span>
+        </a>
+      </li>
 
-    <li class="sidebar-item">
-      <a class="sidebar-link" href="gestion-utilisateurs.html">
-        <i class="align-middle" data-feather="users"></i>
-        <span class="align-middle">Gestion utilisateurs</span>
-      </a>
-    </li>
-
-    <li class="sidebar-item">
-      <a class="sidebar-link" href="roles.html">
-        <i class="align-middle" data-feather="shield"></i>
-        <span class="align-middle">Gestion des rôles</span>
-      </a>
-    </li>
-
-    <li class="sidebar-item">
-      <a class="sidebar-link" href="sauvegarde.html">
-        <i class="align-middle" data-feather="save"></i>
-        <span class="align-middle">Sauvegardes</span>
-      </a>
-    </li>
+      <li class="sidebar-item" id="gest_utilisateurs_nav">
+        <a class="sidebar-link" href="gestion-utilisateurs">
+          <i class="align-middle" data-feather="users"></i>
+          <span class="align-middle">Gestion utilisateurs</span>
+        </a>
+      </li>
+    </div>
   </ul>
 </div>

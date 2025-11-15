@@ -56,7 +56,7 @@ app.use(
 let db;
 
 // ===============================
-// 📂 Initialisation de la base SQLite
+//  Initialisation de la base SQLite
 // ===============================
 const initDb = async () => {
   db = await open({
@@ -132,7 +132,7 @@ CREATE TABLE IF NOT EXISTS Rechercher (
 initDb();
 
 // ===============================
-// 🌐 ROUTES DES PAGES PUBLIQUES
+// ROUTES DES PAGES PUBLIQUES
 // ===============================
 app.get("/", (req, res) =>
   res.sendFile(path.join(__dirname, "public", "index.html"))
@@ -156,7 +156,7 @@ app.get("/historique", (req, res) =>
 app.get("/service", (req, res) =>
   res.sendFile(path.join(__dirname, "public", "services.html"))
 );
-app.get("/utilisateur", (req, res) =>
+app.get("/gestion-utilisateurs", (req, res) =>
   res.sendFile(path.join(__dirname, "public", "utilisateur.html"))
 );
 app.get("/categorie", (req, res) =>
@@ -173,10 +173,10 @@ app.get("/rechercher", (req, res) =>
 );
 
 // ===========================================================
-// 🧍 AUTHENTIFICATION : INSCRIPTION + CONNEXION
+// AUTHENTIFICATION : INSCRIPTION + CONNEXION
 // ===========================================================
 
-// ➕ Inscription
+// Inscription
 app.post("/api/register", upload.single("photo"), async (req, res) => {
   try {
     const {
@@ -197,6 +197,14 @@ app.post("/api/register", upload.single("photo"), async (req, res) => {
       return res
         .status(400)
         .json({ message: "Champs obligatoires manquants !" });
+    }
+
+    // Vérifier si l'email existe déjà
+    const existing = await db.get("SELECT id FROM Utilisateur WHERE mail = ?", [
+      mail,
+    ]);
+    if (existing) {
+      return res.status(409).json({ message: "Email déjà utilisé !" });
     }
 
     const hashedPwd = await bcrypt.hash(password, 10);
@@ -226,7 +234,29 @@ app.post("/api/register", upload.single("photo"), async (req, res) => {
   }
 });
 
-// ➕ Récupérer 1 utilisateur avec sa faculté et son service
+// Récupérer tous les utilisateurs (avec faculté + service)
+app.get("/api/utilisateur", async (req, res) => {
+  try {
+    const users = await db.all(`
+      SELECT u.*, 
+             f.designation AS des_faculte, 
+             s.designation AS des_service
+      FROM Utilisateur u
+      LEFT JOIN Faculte f ON u.faculte_id = f.id
+      LEFT JOIN Service s ON u.service_id = s.id
+      ORDER BY u.id DESC
+    `);
+
+    res.json(users);
+  } catch (err) {
+    console.error("Erreur liste utilisateurs :", err);
+    res
+      .status(500)
+      .json({ message: "Erreur lors de la récupération des utilisateurs." });
+  }
+});
+
+// Récupérer 1 utilisateur avec sa faculté et son service
 app.get("/api/utilisateur/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -246,6 +276,123 @@ app.get("/api/utilisateur/:id", async (req, res) => {
     res
       .status(500)
       .json({ message: "Erreur lors de la récupération de l'utilisateur." });
+  }
+});
+
+// Modifier un utilisateur (possibilité d'uploader une nouvelle photo)
+app.put("/api/utilisateur/:id", upload.single("photo"), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      nom,
+      postnom,
+      sexe,
+      datenaiss,
+      adresse,
+      role,
+      mail,
+      password,
+      faculte_id,
+      service_id,
+    } = req.body;
+
+    const user = await db.get("SELECT * FROM Utilisateur WHERE id = ?", [id]);
+    if (!user)
+      return res.status(404).json({ message: "Utilisateur non trouvé !" });
+
+    // Si l'email change, vérifier unicité
+    if (mail && mail !== user.mail) {
+      const exists = await db.get("SELECT id FROM Utilisateur WHERE mail = ?", [
+        mail,
+      ]);
+      if (exists)
+        return res.status(409).json({ message: "Email déjà utilisé !" });
+    }
+
+    // Gérer le mot de passe (hash si fourni, sinon conserver l'ancien)
+    const newPassword = password
+      ? await bcrypt.hash(password, 10)
+      : user.password;
+
+    // Gérer la photo (si uploadée, supprimer ancienne photo si présente)
+    let newPhoto = user.photo;
+    if (req.file) {
+      newPhoto = "/uploads/" + req.file.filename;
+      if (user.photo) {
+        try {
+          const oldFilename = path.basename(user.photo);
+          const oldPath = path.join(uploadDir, oldFilename);
+          if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+        } catch (e) {
+          console.warn("Impossible de supprimer l'ancienne photo :", e.message);
+        }
+      }
+    }
+
+    // Valeurs finales (conserver les anciennes si champs non fournis)
+    const updated = {
+      nom: nom ?? user.nom,
+      postnom: postnom ?? user.postnom,
+      sexe: sexe ?? user.sexe,
+      datenaiss: datenaiss ?? user.datenaiss,
+      adresse: adresse ?? user.adresse,
+      role: role ?? user.role,
+      mail: mail ?? user.mail,
+      password: newPassword,
+      photo: newPhoto,
+      faculte_id: faculte_id ?? user.faculte_id,
+      service_id: service_id ?? user.service_id,
+    };
+
+    await db.run(
+      `UPDATE Utilisateur SET
+        nom = ?, postnom = ?, sexe = ?, datenaiss = ?, adresse = ?,
+        role = ?, mail = ?, password = ?, photo = ?, faculte_id = ?, service_id = ?
+       WHERE id = ?`,
+      [
+        updated.nom,
+        updated.postnom,
+        updated.sexe,
+        updated.datenaiss,
+        updated.adresse,
+        updated.role,
+        updated.mail,
+        updated.password,
+        updated.photo,
+        updated.faculte_id,
+        updated.service_id,
+        id,
+      ]
+    );
+
+    // Mettre à jour la session si l'utilisateur modifié est celui connecté
+    if (req.session.user && Number(req.session.user.id) === Number(id)) {
+      req.session.user = {
+        id,
+        nom: updated.nom,
+        postnom: updated.postnom,
+        mail: updated.mail,
+        role: updated.role,
+        photo: updated.photo,
+      };
+    }
+
+    // Retourner l'utilisateur mis à jour
+    const userAfter = await db.get(
+      `SELECT u.*, f.designation AS des_faculte, s.designation AS des_service
+       FROM Utilisateur u
+       LEFT JOIN Faculte f ON u.faculte_id = f.id
+       LEFT JOIN Service s ON u.service_id = s.id
+       WHERE u.id = ?`,
+      [id]
+    );
+
+    res.json({ message: "Utilisateur modifié ✅", user: userAfter });
+  } catch (err) {
+    console.error("Erreur modification utilisateur :", err);
+    res
+      .status(500)
+      .json({ message: "Erreur lors de la modification de l'utilisateur." });
   }
 });
 

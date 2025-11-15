@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gestion des Utilisateurs</title>
+
+    <link href="css/app.css" rel="stylesheet" />
+    <link
+      href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css"
+      rel="stylesheet"
+    />
+
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+  </head>
+
+  <body>
+    <div class="wrapper">
+      <nav id="sidebar" class="sidebar js-sidebar"></nav>
+
+      <div class="main">
+        <nav class="navbar navbar-expand navbar-light navbar-bg">
+          <a class="sidebar-toggle js-sidebar-toggle">
+            <i class="hamburger align-self-center"></i>
+          </a>
+
+          <div class="navbar-collapse collapse">
+            <ul class="navbar-nav navbar-align">
+              <li class="nav-item dropdown">
+                <a
+                  class="nav-link dropdown-toggle d-none d-sm-inline-block"
+                  href="#"
+                  data-bs-toggle="dropdown"
+                >
+                  <img
+                    id="userPhoto"
+                    src="./img/image_ucb.png"
+                    class="avatar img-fluid rounded me-1"
+                  />
+                  <span class="text-dark" id="userName">Utilisateur</span>
+                </a>
+                <div class="dropdown-menu dropdown-menu-end">
+                  <a class="dropdown-item" id="logout_btn" href="#"
+                    >Se déconnecter</a
+                  >
+                </div>
+              </li>
+            </ul>
+          </div>
+        </nav>
+
+        <main class="content">
+          <div class="container-fluid p-0">
+            <h1 class="h3 mb-3">Gestion des Utilisateurs</h1>
+
+            <div class="row">
+              <!-- FORMULAIRE -->
+              <div class="col-md-4">
+                <div class="card">
+                  <div class="card-body">
+                    <h5 class="card-title">
+                      Ajouter / Modifier un utilisateur
+                    </h5>
+
+                    <form id="userForm" enctype="multipart/form-data">
+                      <input type="hidden" id="userId" />
+
+                      <div class="mb-3">
+                        <label class="form-label">Nom</label>
+                        <input class="form-control" id="nom" required />
+                      </div>
+
+                      <div class="mb-3">
+                        <label class="form-label">Postnom</label>
+                        <input class="form-control" id="postnom" required />
+                      </div>
+
+                      <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input
+                          type="email"
+                          class="form-control"
+                          id="mail"
+                          required
+                        />
+                      </div>
+
+                      <div class="mb-3">
+                        <label class="form-label">Mot de passe</label>
+                        <input
+                          type="password"
+                          class="form-control"
+                          id="password"
+                          placeholder="(laisser vide pour ne pas changer)"
+                        />
+                      </div>
+
+                      <div class="mb-3">
+                        <label class="form-label">Sexe</label>
+                        <select id="sexe" class="form-select">
+                          <option value="">-- Choisir --</option>
+                          <option value="M">Masculin</option>
+                          <option value="F">Féminin</option>
+                        </select>
+                      </div>
+
+                      <div class="mb-3">
+                        <label class="form-label">Rôle</label>
+                        <select id="role" class="form-select" required>
+                          <option value="agent">Agent de l'UCB</option>
+                          <option value="etudiant">Etudiant</option>
+                          <option value="admin">Administrateur</option>
+                        </select>
+                      </div>
+
+                      <div class="mb-3">
+                        <label class="form-label">Faculté</label>
+                        <select id="faculte_id" class="form-select"></select>
+                      </div>
+
+                      <div class="mb-3">
+                        <label class="form-label">Service</label>
+                        <select id="service_id" class="form-select"></select>
+                      </div>
+
+                      <div class="mb-3">
+                        <label class="form-label">Photo</label>
+                        <input type="file" class="form-control" id="photo" />
+                      </div>
+
+                      <button class="btn btn-primary w-100" id="saveBtn">
+                        Ajouter
+                      </button>
+
+                      <button
+                        type="button"
+                        class="btn btn-secondary w-100 mt-2"
+                        id="cancelBtn"
+                        style="display: none"
+                      >
+                        Annuler
+                      </button>
+                    </form>
+
+                    <div id="formMessage" class="mt-2"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- TABLEAU -->
+              <div class="col-md-8">
+                <div class="card">
+                  <div class="card-body">
+                    <table id="userTable" class="display" style="width: 100%">
+                      <thead>
+                        <tr>
+                          <th>Photo</th>
+                          <th>Nom complet</th>
+                          <th>Email</th>
+                          <th>Rôle</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody></tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+
+        <div id="footer"></div>
+      </div>
+    </div>
+
+    <script src="./js/app.js"></script>
+
+    <script>
+      $(document).ready(function () {
+        // ----------- 1) Charger facultés + services ----------- //
+        function loadFacultes() {
+          fetch("/api/faculte")
+            .then((r) => r.json())
+            .then((data) => {
+              let fac = $("#faculte_id");
+              fac.empty().append('<option value="">-- Choisir --</option>');
+              data.forEach((f) =>
+                fac.append(`<option value="${f.id}">${f.designation}</option>`)
+              );
+            });
+        }
+
+        function loadServices() {
+          fetch("/api/service")
+            .then((r) => r.json())
+            .then((data) => {
+              let srv = $("#service_id");
+              srv.empty().append('<option value="">-- Choisir --</option>');
+              data.forEach((s) =>
+                srv.append(`<option value="${s.id}">${s.designation}</option>`)
+              );
+            });
+        }
+
+        loadFacultes();
+        loadServices();
+
+        // ----------- 2) DATATABLE UTILISATEURS ----------- //
+        let table = $("#userTable").DataTable({
+          ajax: {
+            url: "/api/utilisateur",
+            dataSrc: "",
+          },
+          columns: [
+            {
+              data: "photo",
+              render: (d) =>
+                `<img src="${
+                  d || "./img/image_ucb.png"
+                }" class="rounded" width="45"/>`,
+            },
+            {
+              data: null,
+              render: (u) => `${u.nom} ${u.postnom}`,
+            },
+            { data: "mail" },
+            { data: "role" },
+            {
+              data: null,
+              render: () => `
+                <button class="btn btn-sm btn-info showBtn">Afficher</button>
+                <button class="btn btn-sm btn-warning editBtn">Modifier</button>
+                <button class="btn btn-sm btn-danger deleteBtn">Supprimer</button>
+              `,
+            },
+          ],
+        });
+
+        // ----------- 3) AJOUT & MODIFICATION UTILISATEUR ----------- //
+        $("#userForm").submit(async function (e) {
+          e.preventDefault();
+
+          const id = $("#userId").val();
+          const formData = new FormData();
+
+          [
+            "nom",
+            "postnom",
+            "mail",
+            "password",
+            "sexe",
+            "role",
+            "faculte_id",
+            "service_id",
+          ].forEach((f) => formData.append(f, $("#" + f).val()));
+
+          const file = $("#photo")[0].files[0];
+          if (file) formData.append("photo", file);
+
+          const method = id ? "PUT" : "POST";
+          const url = id ? `/api/utilisateur/${id}` : "/api/register";
+
+          const res = await fetch(url, { method, body: formData });
+          const result = await res.json();
+
+          $("#formMessage").html(
+            `<span class="${res.ok ? "text-success" : "text-danger"}">${
+              result.message
+            }</span>`
+          );
+
+          $("#userForm")[0].reset();
+          $("#userId").val("");
+          $("#saveBtn").text("Ajouter");
+          $("#cancelBtn").hide();
+
+          table.ajax.reload();
+        });
+
+        $("#cancelBtn").click(() => {
+          $("#userForm")[0].reset();
+          $("#userId").val("");
+          $("#saveBtn").text("Ajouter");
+          $("#cancelBtn").hide();
+        });
+
+        // ----------- 4) EDITER ----------- //
+        $("#userTable tbody").on("click", ".editBtn", function () {
+          const u = table.row($(this).parents("tr")).data();
+
+          $("#userId").val(u.id);
+          $("#nom").val(u.nom);
+          $("#postnom").val(u.postnom);
+          $("#mail").val(u.mail);
+          $("#sexe").val(u.sexe);
+          $("#role").val(u.role);
+          $("#faculte_id").val(u.faculte_id);
+          $("#service_id").val(u.service_id);
+
+          $("#saveBtn").text("Modifier");
+          $("#cancelBtn").show();
+        });
+
+        // ----------- 5) SUPPRIMER ----------- //
+        $("#userTable tbody").on("click", ".deleteBtn", async function () {
+          if (!confirm("Voulez-vous supprimer cet utilisateur ?")) return;
+
+          const u = table.row($(this).parents("tr")).data();
+
+          const res = await fetch(`/api/utilisateur/${u.id}`, {
+            method: "DELETE",
+          });
+
+          const result = await res.json();
+          alert(result.message);
+          table.ajax.reload();
+        });
+
+        // ----------- 6) AFFICHER ----------- //
+        $("#userTable tbody").on("click", ".showBtn", function () {
+          const u = table.row($(this).parents("tr")).data();
+
+          alert(
+            `👤 ${u.nom} ${u.postnom}
+                📧 ${u.mail}
+                🎭 Rôle : ${u.role}
+                🏛 Faculté : ${u.des_faculte || "—"}
+                🧩 Service : ${u.des_service || "—"}`
+          );
+        });
+
+        // ----------- 7) SIDEBAR + PROFIL ----------- //
+        $("#sidebar").load("sidebar.html", () => feather.replace());
+        $("#footer").load("footer.html");
+
+        $.get("/api/session", function (data) {
+          if (data.connected) {
+            $("#userName").text(data.user.nom + " " + data.user.postnom);
+            $("#userPhoto").attr(
+              "src",
+              data.user.photo || "./img/image_ucb.png"
+            );
+          }
+        });
+      });
+    </script>
+    <script>
+      $(document).on("click", "#logout_btn", function (e) {
+        e.preventDefault();
+        $.ajax({
+          url: "/api/logout",
+          method: "POST",
+          dataType: "json",
+        })
+          .done(function (data, textStatus, xhr) {
+            window.location.href = "/";
+          })
+          .fail(function (xhr) {
+            let msg = "Erreur serveur";
+            alert(msg);
+          });
+      });
+    </script>
+  </body>
+</html>

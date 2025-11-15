@@ -45,7 +45,7 @@
                 >
                   <img
                     id="userPhoto"
-                    src="img/avatars/avatar.jpg"
+                    src="./img/image_ucb.png"
                     class="avatar img-fluid rounded me-1"
                     alt="Charles Hall"
                   />
@@ -252,13 +252,30 @@
             $("#userName").text(data.user.nom + " " + data.user.postnom);
             $("#userPhoto").attr(
               "src",
-              data.user.photo || "img/avatars/avatar.jpg"
+              data.user.photo || "./img/image_ucb.png"
             );
           } else {
             $("#userName").text("Invité");
-            $("#userPhoto").attr("src", "img/avatars/avatar.jpg");
+            $("#userPhoto").attr("src", "./img/image_ucb.png");
           }
         });
+      });
+    </script>
+    <script>
+      $(document).on("click", "#logout_btn", function (e) {
+        e.preventDefault();
+        $.ajax({
+          url: "/api/logout",
+          method: "POST",
+          dataType: "json",
+        })
+          .done(function (data, textStatus, xhr) {
+            window.location.href = "/";
+          })
+          .fail(function (xhr) {
+            let msg = "Erreur serveur";
+            alert(msg);
+          });
       });
     </script>
   </body>
