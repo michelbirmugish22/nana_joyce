@@ -28,7 +28,7 @@ $(document).ready(function () {
     const ctx = $canvas[0].getContext("2d");
     ctx.drawImage($video[0], 0, 0, a4Width, a4Height);
 
-    const imageData = $canvas[0].toDataURL("image/jpeg", 0.7);
+    const imageData = $canvas[0].toDataURL("image/jpeg", 1);
     capturedPages.push(imageData);
     afficherPages();
   });
@@ -119,7 +119,7 @@ $(document).ready(function () {
 
   // Sauvegarde
   $("#save-edit").on("click", () => {
-    capturedPages[currentEditIndex] = $editCanvas.toDataURL("image/jpeg", 0.7);
+    capturedPages[currentEditIndex] = $editCanvas.toDataURL("image/jpeg", 1);
     $modal.hide();
     afficherPages();
   });
