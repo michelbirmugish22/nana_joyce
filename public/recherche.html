@@ -141,6 +141,12 @@
           </div>
 
           <!-- Résultats -->
+          <input
+            type="hidden"
+            name="utilisateur_id"
+            id="utilisateur_id"
+            value="0"
+          />
           <div class="table-responsive-sm">
             <table id="resultTable" class="display" style="width: 100%">
               <thead>
@@ -240,7 +246,7 @@
           $.post("/api/rechercher", {
             resultat: JSON.stringify(result.map((r) => r.id)),
             date: new Date().toISOString(),
-            utilisateur_id: 1, // À remplacer par session
+            utilisateur_id: $("#utilisateur_id").val(),
             document_id: result.length ? result[0].id : null,
           });
         });
@@ -260,6 +266,7 @@
         $.get("/api/session", function (data) {
           if (data.connected) {
             $("#userName").text(data.user.nom + " " + data.user.postnom);
+            $("#utilisateur_id").val(data.user.id);
             $("#userPhoto").attr(
               "src",
               data.user.photo || "./img/image_ucb.png"
