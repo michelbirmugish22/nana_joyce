@@ -4,7 +4,7 @@
       if (data.connected) {
         if (data.user.role === "etudiant") {
           $("#document_nav").remove();
-          $("historique_nav").remove();
+          $("#historique_nav").remove();
         }
         if (data.user.role !== "admin") {
           $("#admin_nav").remove();

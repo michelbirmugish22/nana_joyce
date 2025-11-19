@@ -87,10 +87,12 @@
         <main class="content mt-4">
           <h1 class="h3 mb-3">🔍 Recherche de documents</h1>
 
-          <!-- Bouton Historique -->
+         <div id="afficher_btn_historique">
           <a href="/historique" class="btn btn-secondary mb-3"
             >📜 Historique des recherches</a
           >
+         </div>
+          
 
           <!-- Formulaire recherche -->
           <div class="search-box">
@@ -119,6 +121,15 @@
                   <option value="3">3 - Confidentiel</option>
                   <option value="4">4 - Très confidentiel</option>
                 </select>
+                <script>
+                  // Si l'utilisateur connecté est "etudiant", n'afficher que "Public"
+                  $.get('/api/session', function(data){
+                    if (data && data.connected && data.user && String(data.user.role || '').toLowerCase() === 'etudiant') {
+                      $('#search_niveau').html('<option value="1">1 - Public</option>');
+                      $("#afficher_btn_historique").html("");
+                    }
+                  });
+                </script>
               </div>
             </div>
 
