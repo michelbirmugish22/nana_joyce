@@ -65,26 +65,27 @@ const initDb = async () => {
   });
 
   await db.exec(`
-CREATE TABLE IF NOT EXISTS Faculte (
+CREATE TABLE IF NOT EXISTS faculte (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  designation TEXT
+  designation VARCHAR(100)
 );
 
-CREATE TABLE IF NOT EXISTS Service (
+CREATE TABLE IF NOT EXISTS service (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  designation TEXT
+  designation VARCHAR(100)
 );
-CREATE TABLE IF NOT EXISTS Utilisateur (
+CREATE TABLE IF NOT EXISTS utilisateur (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  nom TEXT,
-  postnom TEXT,
-  sexe TEXT,
+  nom VARCHAR(30),
+  postnom VARCHAR(30),
+  sexe VARCHAR(30),
   datenaiss DATE,
-  adresse TEXT,
-  role TEXT,
+  adresse VARCHAR(100),
+  fonction VARCHAR(30),
+  role VARCHAR(30),
   mail TEXT UNIQUE,
   password TEXT,
-  photo TEXT,
+  photo VARCHAR(100),
   faculte_id INTEGER,
   service_id INTEGER,
   FOREIGN KEY (faculte_id) REFERENCES Faculte(id)
@@ -95,15 +96,16 @@ CREATE TABLE IF NOT EXISTS Utilisateur (
 
 CREATE TABLE IF NOT EXISTS Categorie (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  designation TEXT,
-  nom TEXT
+  designation VARCHAR(100),
+  nom VARCHAR(30)
 );
 
 CREATE TABLE IF NOT EXISTS Document (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  description TEXT,
-  code TEXT,
-  url TEXT,
+  description VARCHAR(100),
+  code VARCHAR(30),
+  type VARCHAR(30),
+  url VARCHAR(200),
   date_created DATETIME,
   niveau_conf SMALLINT,
   categorie_id INTEGER,
@@ -127,7 +129,7 @@ CREATE TABLE IF NOT EXISTS Rechercher (
 );
   `);
 
-  console.log("✅ Base SQLite initialisée");
+  console.log(" -->>> La BASE DE DONNEES est initialisée avec succès !");
 };
 initDb();
 
@@ -186,6 +188,7 @@ app.post("/api/register", upload.single("photo"), async (req, res) => {
       datenaiss,
       adresse,
       role,
+      fonction,
       mail,
       password,
       faculte_id,
@@ -210,8 +213,8 @@ app.post("/api/register", upload.single("photo"), async (req, res) => {
     const hashedPwd = await bcrypt.hash(password, 10);
 
     await db.run(
-      `INSERT INTO Utilisateur (nom, postnom, sexe, datenaiss, adresse, role, mail, password, photo, faculte_id, service_id)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO Utilisateur (nom, postnom, sexe, datenaiss, adresse, role,fonction, mail, password, photo, faculte_id, service_id)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         nom,
         postnom,
@@ -219,6 +222,7 @@ app.post("/api/register", upload.single("photo"), async (req, res) => {
         datenaiss,
         adresse,
         role,
+        fonction,
         mail,
         hashedPwd,
         photo,
@@ -290,13 +294,17 @@ app.put("/api/utilisateur/:id", upload.single("photo"), async (req, res) => {
       datenaiss,
       adresse,
       role,
+      fonction,
       mail,
       password,
       faculte_id,
       service_id,
     } = req.body;
 
-    const user = await db.get("SELECT * FROM Utilisateur WHERE id = ?", [id]);
+    const user = await db.get(
+      "SELECT u.*, f.designation AS des_faculte, s.designation AS des_service FROM Utilisateur u LEFT JOIN Faculte f ON u.faculte_id = f.id LEFT JOIN Service s ON u.service_id = s.id WHERE u.id = ?",
+      [id]
+    );
     if (!user)
       return res.status(404).json({ message: "Utilisateur non trouvé !" });
 
@@ -337,17 +345,20 @@ app.put("/api/utilisateur/:id", upload.single("photo"), async (req, res) => {
       datenaiss: datenaiss ?? user.datenaiss,
       adresse: adresse ?? user.adresse,
       role: role ?? user.role,
+      fonction: fonction ?? user.fonction,
       mail: mail ?? user.mail,
       password: newPassword,
       photo: newPhoto,
       faculte_id: faculte_id ?? user.faculte_id,
+      des_faculte: user.des_faculte,
+      des_service: user.des_service,
       service_id: service_id ?? user.service_id,
     };
 
     await db.run(
       `UPDATE Utilisateur SET
         nom = ?, postnom = ?, sexe = ?, datenaiss = ?, adresse = ?,
-        role = ?, mail = ?, password = ?, photo = ?, faculte_id = ?, service_id = ?
+        role = ?, fonction = ?, mail = ?, password = ?, photo = ?, faculte_id = ?, service_id = ?
        WHERE id = ?`,
       [
         updated.nom,
@@ -356,6 +367,7 @@ app.put("/api/utilisateur/:id", upload.single("photo"), async (req, res) => {
         updated.datenaiss,
         updated.adresse,
         updated.role,
+        updated.fonction,
         updated.mail,
         updated.password,
         updated.photo,
@@ -373,7 +385,16 @@ app.put("/api/utilisateur/:id", upload.single("photo"), async (req, res) => {
         postnom: updated.postnom,
         mail: updated.mail,
         role: updated.role,
+        fonction: updated.fonction,
         photo: updated.photo,
+        des_faculte: updated.des_faculte,
+        des_service: updated.des_service
+          ? updated.des_service
+          : updated.role === "etudiant"
+          ? "Etudiant en " + (updated.des_faculte || "")
+          : null,
+        service_id: updated.service_id,
+        faculte_id: updated.faculte_id,
       };
     }
 
@@ -403,9 +424,10 @@ app.post("/api/login", async (req, res) => {
     return res.status(400).json({ message: "Email et mot de passe requis !" });
 
   try {
-    const user = await db.get("SELECT * FROM Utilisateur WHERE mail = ?", [
-      mail,
-    ]);
+    const user = await db.get(
+      "SELECT u.*, f.designation AS des_faculte, s.designation AS des_service FROM Utilisateur u LEFT JOIN Faculte f ON u.faculte_id = f.id LEFT JOIN Service s ON u.service_id = s.id WHERE mail = ?",
+      [mail]
+    );
     if (!user)
       return res.status(404).json({ message: "Utilisateur non trouvé !" });
 
@@ -419,8 +441,15 @@ app.post("/api/login", async (req, res) => {
       nom: user.nom,
       postnom: user.postnom,
       mail: user.mail,
+      fonction: user.fonction,
       role: user.role,
       photo: user.photo,
+      des_faculte: user.des_faculte,
+      des_service: user.des_service
+        ? user.role !== "etudiant"
+        : "Etudiant en " + user.des_faculte,
+      service_id: user.service_id,
+      faculte_id: user.faculte_id,
     };
 
     res.json({ message: "Connexion réussie ✅", user: req.session.user });
@@ -554,7 +583,7 @@ app.post("/api/document", upload.single("file"), async (req, res) => {
     }
 
     const fileUrl = req.file ? "/uploads/" + req.file.filename : null;
-    console.log("Fichié envoyé est : " + fileUrl);
+    // console.log("Fichié envoyé est : " + fileUrl);
 
     const { description, code, categorie_id, niveau_conf } = req.body;
 

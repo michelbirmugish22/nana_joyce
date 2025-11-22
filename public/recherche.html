@@ -85,14 +85,19 @@
           </div>
         </nav>
         <main class="content mt-4">
-          <h1 class="h3 mb-3">🔍 Recherche de documents</h1>
+          <h1 class="h3 mb-3">
+            🔍 Rechercher et Consulter les documents du service
+            <span
+              style="font-weight: bolder; color: rgb(21, 5, 77)"
+              id="user_service"
+            ></span>
+          </h1>
 
-         <div id="afficher_btn_historique">
-          <a href="/historique" class="btn btn-secondary mb-3"
-            >📜 Historique des recherches</a
-          >
-         </div>
-          
+          <div id="afficher_btn_historique">
+            <a href="/historique" class="btn btn-secondary mb-3"
+              >📜 Historique des recherches</a
+            >
+          </div>
 
           <!-- Formulaire recherche -->
           <div class="search-box">
@@ -108,7 +113,7 @@
               </div>
 
               <div class="col-md-3">
-                <label class="form-label">Catégorie</label>
+                <label class="form-label">Catégorie / Type</label>
                 <select id="search_categorie" class="form-control"></select>
               </div>
 
@@ -123,10 +128,34 @@
                 </select>
                 <script>
                   // Si l'utilisateur connecté est "etudiant", n'afficher que "Public"
-                  $.get('/api/session', function(data){
-                    if (data && data.connected && data.user && String(data.user.role || '').toLowerCase() === 'etudiant') {
-                      $('#search_niveau').html('<option value="1">1 - Public</option>');
+                  $.get("/api/session", function (data) {
+                    console.log("Fonction : " + data.user.fonction);
+                    console.log("Role : " + data.user.role);
+                    if (
+                      data &&
+                      data.connected &&
+                      data.user &&
+                      String(data.user.role || "").toLowerCase() === "etudiant"
+                    ) {
+                      $("#search_niveau").html(
+                        '<option value="1">1 - Public</option>'
+                      );
                       $("#afficher_btn_historique").html("");
+                    }
+                    const fonction = String(
+                      data.user.fonction || ""
+                    ).toLowerCase();
+                    if (
+                      data &&
+                      data.connected &&
+                      data.user &&
+                      (fonction === "agent_bureau" ||
+                        fonction === "agent_accueil" ||
+                        fonction === "secretaire")
+                    ) {
+                      $("#search_niveau").html(
+                        '<option value="1">1 - Public</option><option value="2">2 - Interne</option>'
+                      );
                     }
                   });
                 </script>
@@ -164,7 +193,7 @@
                 <tr>
                   <th>Description</th>
                   <th>Code</th>
-                  <th>Catégorie</th>
+                  <th>Catégorie / Type</th>
                   <th>Date</th>
                   <th>Niveau</th>
                   <th>Ouvrir</th>
@@ -278,6 +307,7 @@
           if (data.connected) {
             $("#userName").text(data.user.nom + " " + data.user.postnom);
             $("#utilisateur_id").val(data.user.id);
+            $("#user_service").text(data.user.des_service || "");
             $("#userPhoto").attr(
               "src",
               data.user.photo || "./img/image_ucb.png"

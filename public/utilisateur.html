@@ -67,17 +67,23 @@
                       <input type="hidden" id="userId" />
 
                       <div class="mb-3">
-                        <label class="form-label">Nom</label>
+                        <label class="form-label"
+                          >Nom <span style="color: red">*</span>
+                        </label>
                         <input class="form-control" id="nom" required />
                       </div>
 
                       <div class="mb-3">
-                        <label class="form-label">Postnom</label>
+                        <label class="form-label"
+                          >Postnom <span style="color: red">*</span></label
+                        >
                         <input class="form-control" id="postnom" required />
                       </div>
 
                       <div class="mb-3">
-                        <label class="form-label">Email</label>
+                        <label class="form-label"
+                          >Email <span style="color: red">*</span></label
+                        >
                         <input
                           type="email"
                           class="form-control"
@@ -87,7 +93,10 @@
                       </div>
 
                       <div class="mb-3">
-                        <label class="form-label">Mot de passe</label>
+                        <label class="form-label"
+                          >Mot de passe
+                          <span style="color: green">*</span></label
+                        >
                         <input
                           type="password"
                           class="form-control"
@@ -97,8 +106,10 @@
                       </div>
 
                       <div class="mb-3">
-                        <label class="form-label">Sexe</label>
-                        <select id="sexe" class="form-select">
+                        <label class="form-label"
+                          >Sexe <span style="color: red">*</span></label
+                        >
+                        <select id="sexe" class="form-select" required>
                           <option value="">-- Choisir --</option>
                           <option value="M">Masculin</option>
                           <option value="F">Féminin</option>
@@ -106,26 +117,64 @@
                       </div>
 
                       <div class="mb-3">
-                        <label class="form-label">Rôle</label>
+                        <label class="form-label"
+                          >Rôle (Dans le système)
+                          <span style="color: red">*</span></label
+                        >
                         <select id="role" class="form-select" required>
-                          <option value="agent">Agent de l'UCB</option>
-                          <option value="etudiant">Etudiant</option>
-                          <option value="admin">Administrateur</option>
+                          <option value="agent">
+                            Agent de l'UCB
+                            <span>(Peut numériser et Consulter)</span>
+                          </option>
+                          <option value="etudiant">
+                            Etudiant (Peut consulter seulement)
+                          </option>
+                          <option value="admin">
+                            Administrateur du système
+                          </option>
                         </select>
                       </div>
 
                       <div class="mb-3">
-                        <label class="form-label">Faculté</label>
-                        <select id="faculte_id" class="form-select"></select>
+                        <label class="form-label"
+                          >Faculté <span style="color: red">*</span></label
+                        >
+                        <select
+                          id="faculte_id"
+                          class="form-select"
+                          required
+                        ></select>
                       </div>
 
                       <div class="mb-3">
-                        <label class="form-label">Service</label>
+                        <label class="form-label"
+                          >Service (Si Etudiant laissez vide)</label
+                        >
                         <select id="service_id" class="form-select"></select>
                       </div>
 
                       <div class="mb-3">
-                        <label class="form-label">Photo</label>
+                        <label class="form-label"
+                          >Fonction occupé dans le service.</label
+                        >
+                        <select id="fonction" class="form-select" required>
+                          <option value="">
+                            Si étudiant, sautez cette case !
+                          </option>
+                          <option value="directeur">Directeur(trice)</option>
+                          <option value="adjoint">
+                            Directeur(trice) adjoint(e)
+                          </option>
+                          <option value="secretaire">Secrétaire</option>
+                          <option value="agent_bureau">Agent du Bureau</option>
+                          <option value="agent_accueil">Agent d'accueil</option>
+                        </select>
+                      </div>
+
+                      <div class="mb-3">
+                        <label class="form-label"
+                          >Photo <span style="color: green">*</span></label
+                        >
                         <input type="file" class="form-control" id="photo" />
                       </div>
 
@@ -152,12 +201,38 @@
               <div class="col-md-8">
                 <div class="card">
                   <div class="card-body">
+                    <div class="table-responsive">
+                      <table id="userTable" class="display" style="width: 100%">
+                        <thead>
+                          <tr>
+                            <th>Photo</th>
+                            <th>Nom complet</th>
+                            <th>Email</th>
+                            <th>Fonction</th>
+                            <th>Service</th>
+                            <th>Faculté</th>
+                            <th>Rôle</th>
+                            <th>Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody></tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-8">
+                <div class="card">
+                  <div class="card-body">
                     <table id="userTable" class="display" style="width: 100%">
                       <thead>
                         <tr>
                           <th>Photo</th>
                           <th>Nom complet</th>
                           <th>Email</th>
+                          <th>Fonction</th>
+                          <th>Service</th>
+                          <th>Faculté</th>
                           <th>Rôle</th>
                           <th>Actions</th>
                         </tr>
@@ -197,7 +272,11 @@
             .then((r) => r.json())
             .then((data) => {
               let srv = $("#service_id");
-              srv.empty().append('<option value="">-- Choisir --</option>');
+              srv
+                .empty()
+                .append(
+                  '<option value="">-- Si étudiant, sautez cette case ! --</option>'
+                );
               data.forEach((s) =>
                 srv.append(`<option value="${s.id}">${s.designation}</option>`)
               );
@@ -226,6 +305,22 @@
               render: (u) => `${u.nom} ${u.postnom}`,
             },
             { data: "mail" },
+            {
+              data: "fonction",
+              render: (f) => {
+                if (!f) return "—";
+                const labels = {
+                  directeur: "Directeur(trice)",
+                  adjoint: "Directeur(trice) adjoint(e)",
+                  secretaire: "Secrétaire",
+                  agent_bureau: "Agent du Bureau",
+                  agent_accueil: "Agent d'accueil",
+                };
+                return labels[f] || f;
+              },
+            },
+            { data: "des_service" },
+            { data: "des_faculte" },
             { data: "role" },
             {
               data: null,
@@ -254,6 +349,7 @@
             "role",
             "faculte_id",
             "service_id",
+            "fonction",
           ].forEach((f) => formData.append(f, $("#" + f).val()));
 
           const file = $("#photo")[0].files[0];
@@ -294,6 +390,7 @@
           $("#nom").val(u.nom);
           $("#postnom").val(u.postnom);
           $("#mail").val(u.mail);
+          $("#fonction").val(u.fonction);
           $("#sexe").val(u.sexe);
           $("#role").val(u.role);
           $("#faculte_id").val(u.faculte_id);

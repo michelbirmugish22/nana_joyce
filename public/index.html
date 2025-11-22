@@ -558,7 +558,15 @@
         // 🔹 Récupérer info utilisateur depuis la session
         $.get("/api/session", function (data) {
           if (data.connected) {
-            $("#welcome_name").text(data.user.nom + " " + data.user.postnom);
+            console.log(data.user);
+            $("#welcome_name").text(
+              data.user.nom +
+                " " +
+                data.user.postnom +
+                " (" +
+                data.user.des_service +
+                ")"
+            );
           }
         });
 
