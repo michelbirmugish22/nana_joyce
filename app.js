@@ -425,7 +425,7 @@ app.post("/api/login", async (req, res) => {
 
   try {
     const user = await db.get(
-      "SELECT u.*, f.designation AS des_faculte, s.designation AS des_service FROM Utilisateur u LEFT JOIN Faculte f ON u.faculte_id = f.id LEFT JOIN Service s ON u.service_id = s.id WHERE mail = ?",
+      "SELECT u.*, f.designation AS des_faculte, s.designation AS des_service FROM Utilisateur u INNER JOIN Faculte f ON u.faculte_id = f.id INNER JOIN Service s ON u.service_id = s.id WHERE mail = ?",
       [mail]
     );
     if (!user)
@@ -446,8 +446,10 @@ app.post("/api/login", async (req, res) => {
       photo: user.photo,
       des_faculte: user.des_faculte,
       des_service: user.des_service
-        ? user.role !== "etudiant"
-        : "Etudiant en " + user.des_faculte,
+        ? user.des_service
+        : user.role === "etudiant"
+        ? "Etudiant en " + (user.des_faculte || "")
+        : null,
       service_id: user.service_id,
       faculte_id: user.faculte_id,
     };
@@ -567,7 +569,7 @@ app.delete("/api/categorie/:id", async (req, res) => {
 app.get("/api/document", async (req, res) =>
   res.json(
     await db.all(
-      "SELECT d.*, c.designation AS categorie_designation FROM Document d INNER JOIN Utilisateur u ON d.utilisateur_id=u.id INNER JOIN Categorie c ON d.categorie_id=c.id"
+      "SELECT d.*, s.id As id_service, s.designation As des_service, c.designation AS categorie_designation FROM Document d INNER JOIN Utilisateur u ON d.utilisateur_id=u.id INNER JOIN service s ON u.service_id = s.id INNER JOIN Categorie c ON d.categorie_id=c.id"
     )
   )
 );

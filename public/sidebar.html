@@ -2,12 +2,15 @@
   $(document).ready(function () {
     $.get("/api/session", function (data) {
       if (data.connected) {
-        if (data.user.role === "etudiant") {
+        if (data.user.role !== "agent") {
           $("#document_nav").remove();
           $("#historique_nav").remove();
         }
         if (data.user.role !== "admin") {
           $("#admin_nav").remove();
+        }
+        if (data.user.role === "admin") {
+          $("#recherche_nav").remove();
         }
       }
     });
@@ -27,22 +30,25 @@
         <span class="align-middle">Tableau de bord</span>
       </a>
     </li>
+    <div id="document_nav">
+      <li class="sidebar-header">Numérisation et Recherche</li>
 
-    <li class="sidebar-header">Numérisation et Recherche</li>
+      <li class="sidebar-item" id="">
+        <a class="sidebar-link" href="/document">
+          <i class="align-middle" data-feather="file-plus"></i>
+          <span class="align-middle">Numériser et Archiver</span>
+        </a>
+      </li>
+    </div>
 
-    <li class="sidebar-item" id="document_nav">
-      <a class="sidebar-link" href="/document">
-        <i class="align-middle" data-feather="file-plus"></i>
-        <span class="align-middle">Numériser et Archiver</span>
-      </a>
-    </li>
-
-    <li class="sidebar-item">
-      <a class="sidebar-link" href="recherche-documents">
-        <i class="align-middle" data-feather="search"></i>
-        <span class="align-middle">Rechercher des documents</span>
-      </a>
-    </li>
+    <div id="recherche_nav">
+      <li class="sidebar-item">
+        <a class="sidebar-link" href="recherche-documents">
+          <i class="align-middle" data-feather="search"></i>
+          <span class="align-middle">Rechercher des documents</span>
+        </a>
+      </li>
+    </div>
 
     <div id="historique_nav">
       <li class="sidebar-item">

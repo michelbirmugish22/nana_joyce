@@ -89,9 +89,11 @@
                 </a>
                 <div class="dropdown-menu dropdown-menu-end">
                   <a class="dropdown-item" href="#"
-                    ><i class="align-middle me-1" data-feather="user"></i>
-                    Profil</a
-                  >
+                    >Connecté comme :
+                    <span class="text-primary" id="userRole"
+                      >Administrateur</span
+                    >
+                  </a>
                   <div class="dropdown-divider"></div>
                   <a class="dropdown-item" id="logout_btn" href="#"
                     >Se déconnecter</a
@@ -542,6 +544,15 @@
           if (data.connected) {
             $("#userName").text(data.user.nom + " " + data.user.postnom);
             $("#welcome_name").text(data.user.nom + " " + data.user.postnom);
+            $("#userRole").text(
+              data.user.role === "admin"
+                ? "Administrateur"
+                : data.user.role === "agent_bureau"
+                ? "Agent de bureau"
+                : data.user.role === "agent_accueil"
+                ? "Agent d'accueil"
+                : data.user.role
+            );
             $("#userPhoto").attr(
               "src",
               data.user.photo || "./img/image_ucb.png"
@@ -559,11 +570,20 @@
         $.get("/api/session", function (data) {
           if (data.connected) {
             console.log(data.user);
+            txt_fonction =
+              data.user.fonction === "agent_bureau"
+                ? "Agent de bureau"
+                : data.user.fonction === "agent_accueil"
+                ? "Agent d'accueil"
+                : data.user.fonction;
+
             $("#welcome_name").text(
               data.user.nom +
                 " " +
                 data.user.postnom +
                 " (" +
+                txt_fonction +
+                " en " +
                 data.user.des_service +
                 ")"
             );

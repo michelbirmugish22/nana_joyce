@@ -187,6 +187,7 @@
             id="utilisateur_id"
             value="0"
           />
+          <input type="text" name="service_id" id="service_id" value="0" />
           <div class="table-responsive-sm">
             <table id="resultTable" class="display" style="width: 100%">
               <thead>
@@ -195,7 +196,8 @@
                   <th>Code</th>
                   <th>Catégorie / Type</th>
                   <th>Date</th>
-                  <th>Niveau</th>
+                  <th>Confidentialité</th>
+                  <th>Service</th>
                   <th>Ouvrir</th>
                 </tr>
               </thead>
@@ -230,13 +232,35 @@
             { data: "description" },
             { data: "code" },
             { data: "categorie_designation" },
-            { data: "date_created" },
-            { data: "niveau_conf" },
+            {
+              data: "date_created",
+              render: function (data) {
+                return data ? data.split("T")[0] : "";
+              },
+            },
+            {
+              data: "niveau_conf",
+              render: function (data) {
+                switch (data) {
+                  case 1:
+                    return "Public";
+                  case 2:
+                    return "Interne";
+                  case 3:
+                    return "Confidentiel";
+                  case 4:
+                    return "Très confidentiel";
+                  default:
+                    return data;
+                }
+              },
+            },
+            { data: "des_service" },
             {
               data: "url",
               render: function (url) {
                 return url
-                  ? `<a href="${url}" target="_blank" rel="noopener noreferrer" class="btn btn-info btn-sm">📄 Afficher</a>`
+                  ? `<a href="${url}" target="_blank" class="btn btn-primary btn-lg">📄 Afficher</a>`
                   : "Aucun fichier";
               },
             },
@@ -247,6 +271,7 @@
         //   CHARGER CATÉGORIES
         // ----------------------
         $.get("/api/categorie", function (cat) {
+          $("#search_categorie").append(`<option value="">Toutes</option>`);
           cat.forEach((c) => {
             $("#search_categorie").append(
               `<option value="${c.id}">${c.designation}</option>`
@@ -262,10 +287,13 @@
           const code = $("#search_code").val().toLowerCase();
           const cat = $("#search_categorie").val();
           const niv = $("#search_niveau").val();
+          const serv = $("#service_id").val();
           const d1 = $("#search_date1").val();
           const d2 = $("#search_date2").val();
 
           const documents = await $.get("/api/document");
+
+          console.log(documents);
 
           // Filtrage local
           const result = documents.filter((doc) => {
@@ -275,6 +303,8 @@
               (code === "" || doc.code.toLowerCase().includes(code)) &&
               (cat === "" || doc.categorie_id == cat) &&
               (niv === "" || doc.niveau_conf == niv) &&
+              // Si niv == 1 ne pas appliquer le filtre sur le service
+              (niv === "1" || serv === "" || doc.id_service == serv) &&
               dateDoc >= d1 &&
               dateDoc <= d2
             );
@@ -307,6 +337,7 @@
           if (data.connected) {
             $("#userName").text(data.user.nom + " " + data.user.postnom);
             $("#utilisateur_id").val(data.user.id);
+            $("#service_id").val(data.user.service_id);
             $("#user_service").text(data.user.des_service || "");
             $("#userPhoto").attr(
               "src",

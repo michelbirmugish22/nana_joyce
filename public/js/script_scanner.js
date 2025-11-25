@@ -235,6 +235,7 @@ $(document).ready(function () {
       $("#scanning_div").hide();
 
       $("#uploading_div").show();
+      table.ajax.reload();
     }
   });
 
